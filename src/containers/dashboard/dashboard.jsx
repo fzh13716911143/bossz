@@ -13,8 +13,9 @@ import Msg from '../msg/msg'
 import User from '../user/user'
 import NotFound from '../../components/not-found/not-found'
 import NavFooter from '../../components/nav-footer/nav-footer'
-import {getUserInfo} from '../../redux/actions'
+import {getUserInfo,receiveMsg,getChatMsgList} from '../../redux/actions'
 import {getRedirectPath} from '../../utils/index'
+import Chat from '../chat/chat';
 
 class Dashboard extends Component {
 
@@ -59,8 +60,13 @@ class Dashboard extends Component {
         if(userid && !user._id) {
             this.props.getUserInfo()
         }
+        //绑定接收服务发送的信息的监听
+        this.props.receiveMsg()
+        //获取当前用户所有的相关聊天列表
+        this.props.getChatMsgList()
     }
     render () {
+        // debugger
         // 检查用户是否登陆, 如果没有, 跳转到login
         const userid = cookies.get('userid')
         const {user, location} = this.props
@@ -69,7 +75,7 @@ class Dashboard extends Component {
             return null
         }
         if(user.type) { // 已经登陆
-            if(location.pathname==='/') { // 访问的/
+            if(location.pathname==='/') {
 
                 //计算需要重定向的路由路径
                 const path = getRedirectPath(user.type,user.avatar)
@@ -100,6 +106,7 @@ class Dashboard extends Component {
                 <Switch>
                     <Route path='/bossInfo' component={BossInfo}/>
                     <Route path='/geniusInfo' component={GeniusInfo}/>
+                    <Route path='/chat/:userid' component={Chat}/>
 
                     {
                         this.navList.map((nav,index)=>(
@@ -116,5 +123,5 @@ class Dashboard extends Component {
 
 export default connect(
     state=>({user:state.user}),
-{getUserInfo}
+{getUserInfo,receiveMsg,getChatMsgList}
 )(Dashboard)

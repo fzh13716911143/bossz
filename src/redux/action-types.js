@@ -10,3 +10,11 @@ export const ERROR_MSG = 'ERROR_MSG'
 export const RECEIVE_USER = 'RECEIVE_USER'
 //重置user
 export const RESET_USER = 'RESET_USER'
+//用户列表
+export const USER_LIST = 'USER_LIST'
+
+//接收消息
+export const RESEIVE_CHAT_MSG = 'RESEIVE_CHAT_MSG'
+
+//接收多个消息
+export const CHAT_MSG_LIST = 'CHAT_MSG_LIST'

@@ -10,3 +10,7 @@ export const reqLogin = (user) => ajax('/api/login', user, 'POST')
 export const reqUpdateUser = (user) => ajax('/api/update',user,'POST')
 // 获取用户信息
 export const reqUserInfo = () => ajax('/api/userinfo')
+//请求获取用户列表
+export const reqUserList = (type) => ajax('/api/list',{type})
+//获取当前用户的所有聊天记录
+export const reqChatMsgList = () => ajax('/api/getmsgs')

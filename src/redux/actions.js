@@ -1,13 +1,27 @@
 /*
 包含n个action creator 函数的模块
  */
-import {reqRegister, reqLogin,reqUpdateUser,reqUserInfo} from '../api'
+import io from 'socket.io-client'
+import {
+    reqRegister,
+    reqLogin,
+    reqUpdateUser,
+    reqUserInfo,
+    reqUserList,
+    reqChatMsgList
+} from '../api'
 import {
     AUTH_SUCCESS,
     ERROR_MSG,
     RECEIVE_USER,
-    RESET_USER
+    RESET_USER,
+    USER_LIST,
+    RESEIVE_CHAT_MSG,
+    CHAT_MSG_LIST
 } from './action-types'
+
+// 连接服务器, 得到代表连接的socket对象
+const socket = io('ws://localhost:4000')
 
 // 同步授权成功action
 const authSuccess = (user) => ({type: AUTH_SUCCESS, data: user})
@@ -66,9 +80,10 @@ export const login = ({name, pwd}) => {
     }
 }
 
-
+// 同步接收用户
 const receiveUser = (user)=>({type:RECEIVE_USER,data:user})
-const resetUser = (msg) =>({type:RESET_USER,data:msg})
+// 同步重置用户
+export const resetUser = (msg) =>({type:RESET_USER,data:msg})
 /*
 异步更新用户
  */
@@ -96,6 +111,62 @@ export const getUserInfo = () => {
             dispatch(receiveUser(result.data))
         } else { // 失败
             dispatch(resetUser(result.msg))
+        }
+    }
+}
+
+const userList = (userList) => ({type:USER_LIST,data:userList})
+// 异步获取用户列表
+export const getUserList = (type)=>{
+    return async dispatch => {
+        const response = await reqUserList(type)
+        const result = response.data
+        console.log('result',result.data)
+        if(result.code===0) { // 获取用户成功
+            dispatch(userList(result.data))
+        }
+    }
+}
+
+/*
+异步发送消息
+ */
+export const sendMsg = ({content,from,to})=>{
+    return dispatch =>{
+        // 向服务器发送消息
+        socket.emit('sendMessage', {content,from,to})
+        console.log('浏览器向服务器发送消息',{content,from,to})
+    }
+}
+
+const receiveChatMsg = (chatMsg) => ({type:RESEIVE_CHAT_MSG,data:chatMsg})
+/*
+异步接收消息
+ */
+export const receiveMsg = ()=>{
+    return dispatch =>{
+        if(!socket.hasOn){
+            // 绑定'receiveMessage'的监听, 来接收服务器发送的消息
+            socket.on('receiveMessage', function (chatMsg) {
+                dispatch (receiveChatMsg(chatMsg))
+            })
+            socket.hasOn = true
+        }
+
+    }
+}
+
+const chatMsgList = ({chatMsgs,users}) => ({type:CHAT_MSG_LIST,data: {chatMsgs,users}})
+
+/*
+异步获取当前用户所有消息列表
+ */
+export const getChatMsgList = () => {
+    return async dispatch =>{
+        const response = await reqChatMsgList()
+        const result = response.data
+        if(result.code===0) { // 获取用户成功
+            dispatch(chatMsgList(result.data))
         }
     }
 }

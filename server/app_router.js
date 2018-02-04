@@ -12,6 +12,7 @@ const express = require('express')
 const md5 = require('blueimp-md5')
 const models = require('./models')
 const UserModel = models.getModel('user')
+const ChatModel = models.getModel('chat')
 // 2. 得到路由器
 const router = express.Router()
 const _filter = {'pwd':0,'__v':0}
@@ -43,6 +44,7 @@ router.post('/login',function (req,res) {
     UserModel.findOne({name,pwd:md5(pwd)},_filter,function (err,user) {
         // 3.1. 如果已经存在, 返回一个错误的提示
         if(user){
+          res.cookie('userid',user._id)
           res.json({code:0,data:user})
         }else {
             // 3.2. 不存在, 返回错误信息
@@ -92,6 +94,44 @@ router.get('/userinfo', function (req, res) {
         }
     })
 })
+
+//查看用户列表
+router.get('/list',function (req,res) {
+    const {type} = req.query
+    UserModel.find({type},function (err,users) {
+        console.log(users)
+        return res.json({code:0,data:users})
+    })
+})
+
+/*
+获取所有交流信息列表
+ */
+router.get('/getmsgs', function(req, res) {
+    //当前登录用户的id
+    const userid = req.cookies.userid
+
+    UserModel.find({}, function (err, userdocs) {
+        // const users = {}
+        // userdocs.forEach(user => {
+        //     users[user._id] = {name: user.name, avatar: user.avatar}
+        // })
+
+        //根据user数组生成一个  多个user对象
+        const users = userdocs.reduce((users,user) =>{
+            users[user._id]=user
+            return users
+        },{})
+
+        ChatModel.find(
+            {'$or':[{from:userid}, {to: userid}]},
+            function(err, chatMsgs) {
+                return res.json({code: 0, data:{chatMsgs, users}})
+            }
+        )
+    })
+})
+
 
 // 4. 向外暴露路由器
 module.exports = router
